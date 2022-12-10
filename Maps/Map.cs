@@ -1,58 +1,61 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UKEngine.Entities;
 
 namespace UKEngine.Maps
 {
     public class Map
     {
 
-        private List<MapPosition> Layers = new List<MapPosition>();
+        private List<MapPosition> Positions = new List<MapPosition>();
 
         public Map()
         {
-
         }
 
-        public MapPosition GetAtPosition(int layer, int x, int y)
+        public MapPosition GetPosition(int layer, int x, int y)
         {
-            return Layers.Where(c => c.Layer == layer && c.X == x && c.Y == y).FirstOrDefault();
+            return Positions.Where(c => c.Layer == layer && c.X == x && c.Y == y).FirstOrDefault();
         }
 
         public List<MapPosition> GetLayer(int layer)
         {
-            return Layers.Where(c => c.Layer == layer).ToList();
+            return Positions.Where(c => c.Layer == layer).ToList();
         }
 
-        public void AssignTerrain((int x, int y) startingPoint, List<MapPosition> mapPositions)
+        public void AddEntity(int layer, int x, int y, GameObject gameObject)
         {
-            foreach (var pos in mapPositions)
-            {
-                var offsetMapPosition = new MapPosition(pos.Layer, pos.X + startingPoint.x, pos.Y + startingPoint.y, pos.Navigable);
-
-                Layers.Add(offsetMapPosition);
-            }
-
-
+            var positionsWithGameObject = Positions.Where(e => e.Entity.Id == gameObject.Id).ToList();
+            positionsWithGameObject.ForEach(e => Positions.Remove(e));
+            var position = new MapPosition(layer, x, y, gameObject, this);
+            Positions.Add(position);
         }
 
-        public List<MapPosition> BuildRectangleRoom(int width, int height)
+        public bool MoveEntity(GameObject gameObject, (int x, int y) direction)
         {
-            var positions = new List<MapPosition>();
-            for (var x = 0; x < width; x++)
-            {
-                for (var y = 0; y < height; y++)
-                {
-                    var isWall = x == 0 || y == 0 || x == width - 1 || y == height - 1;
-                    var pos = new MapPosition(0, x, y, !isWall);
-                    positions.Add(pos);
-                }
 
-            }
+            var positionWithGameObject = Positions.Where(e => e.Entity.Id == gameObject.Id).FirstOrDefault();
+            if (positionWithGameObject == null) return false;
+            positionWithGameObject.X += direction.x;
+            positionWithGameObject.Y += direction.y;
+            return true;
 
-            return positions;
 
         }
+
+
+        public void AssignTerrain((int x, int y) startingPoint, List<(int X, int Y, GameObject gameObject)> roomData)
+        {
+            foreach (var pos in roomData)
+            {
+                //see if gameobjectt exists elsewhere, remove it
+                AddEntity(0, pos.X + startingPoint.x, pos.Y + startingPoint.y, pos.gameObject);
+            }
+        }
+
+
+
 
     }
 }

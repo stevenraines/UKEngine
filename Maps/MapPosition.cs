@@ -1,28 +1,30 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UKEngine.Entities;
 
 namespace UKEngine.Maps
 {
     public class MapPosition
     {
 
-        public int Layer { get; }
-        public int X { get; }
-        public int Y { get; }
+        public int Layer { get; protected set; }
+        public int X { get; set; }
+        public int Y { get; set; }
+        public GameObject Entity = null;
 
+        public Map Map { get; }
 
-        public bool Navigable { get; protected set; }
-
-        public MapPosition(int layer, int x, int y)
+        //construct the postion
+        public MapPosition(int layer, int x, int y, GameObject entity, Map map)
         {
             Layer = layer;
             X = x;
             Y = y;
+            Entity = entity;
+            Entity.Position = this;
+            Map = map;
         }
-        public MapPosition(int layer, int x, int y, bool navigable) : this(layer, x, y)
-        {
-            Navigable = navigable;
-        }
+
     }
 }
