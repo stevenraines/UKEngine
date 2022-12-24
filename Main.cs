@@ -1,16 +1,19 @@
 using Godot;
+using System;
 using System.Linq;
 using static Godot.GD;
 using static UKEngine.Factories.TerrainFactory;
 using static UKEngine.Factories.EntityFactory;
-using UKEngine.Maps;
-using UKEngine.Maps.Generators;
-using UKEngine.Entities;
+
+using RLEngine.Generators;
+using RLEngine;
+using RLEngine.Enumerations;
 
 public class Main : Node2D
 {
 
     const int TileSize = 16;
+    const int DrawDistance = 16;
 
     [Export]
     private NodePath tileMapPath = null;
@@ -19,21 +22,26 @@ public class Main : Node2D
     private TileMap tileMap = null;
     private Camera2D camera2D = null;
 
-    Map map { get; set; }
-    GameObject player { get; set; }
+
+    IGameBoard GameBoard { get; set; }
+    IGameObject Player { get; set; }
 
     public override void _Ready()
     {
 
+        // set-up the visual elements
         tileMap = GetNode<TileMap>(tileMapPath);
         camera2D = GetNode<Camera2D>(camera2DPath);
-        map = new Map();
 
-        player = new GameObject(UKEngine.Types.EntityType.Player);
+        // make a new GameBoard!
+        GameBoard = new GameBoard(new GameLoop(GameLoopType.Serial));
 
-        map.AddEntity(1, 0, 0, player);
-        map.AssignTerrain((-4, -4), RectangleRoomGenerator.Generate(10, 10));
-
+        // Create a player
+        Player = new GameObject(GameBoard, GameObjectType.Player);
+        GameBoard.AddGameObject(Player, 0, 0, 0);
+        GameBoard.AddGameObjects(-5, -5, RectangleRoomGenerator.Generate(11, 11));
+        GameBoard.AddGameObject(GameObjectType.Wall, 1, 3, 0);
+        GameBoard.AddGameObject(GameObjectType.Wall, 3, 2, 0);
     }
 
     public override void _Process(float delta)
@@ -64,54 +72,55 @@ public class Main : Node2D
         if (!action && Input.IsActionJustReleased("ui_right") && Input.IsActionJustReleased("ui_up"))
         {
             // Move right.
-            player.Move((1, -1));
+            Player.Move(1, -1, 0);
             action = true;
         }
 
         if (!action && Input.IsActionJustReleased("ui_right") && Input.IsActionJustReleased("ui_down"))
         {
             // Move right.
-            player.Move((1, 1));
+            Player.Move(1, 1, 0);
             action = true;
         }
 
         if (!action && Input.IsActionJustReleased("ui_left") && Input.IsActionJustReleased("ui_up"))
         {
             // Move right.
-            player.Move((-1, -1));
+            Player.Move(-1, -1, 0);
             action = true;
         }
 
         if (!action && Input.IsActionJustReleased("ui_left") && Input.IsActionJustReleased("ui_down"))
         {
             // Move right.
-            player.Move((-1, 1));
+            Player.Move(-1, 1, 0);
             action = true;
         }
 
         if (!action && Input.IsActionJustReleased("ui_right"))
         {
             // Move right.
-            player.Move((1, 0));
+            Player.Move(1, 0, 0);
             action = true;
         }
 
         if (!action && Input.IsActionJustReleased("ui_left"))
         {
             // Move right.
-            player.Move((-1, 0));
+            Player.Move(-1, 0, 0);
             action = true;
         }
+
         if (!action && Input.IsActionJustReleased("ui_up"))
         {
             // Move right.
-            player.Move((0, -1));
+            Player.Move(0, -1, 0);
             action = true;
         }
         if (!action && Input.IsActionJustReleased("ui_down"))
         {
             // Move right.
-            player.Move((0, 1));
+            Player.Move(0, 1, 0);
             action = true;
         }
 
@@ -125,22 +134,21 @@ public class Main : Node2D
 
     public void RedrawScreen()
     {
-        var positions = map.GetLayer(0);
-        foreach (var pos in positions.OrderBy(p => p.Layer))
+
+        var gameBoardView = new GameBoardView(GameBoard, Player.X - DrawDistance, Player.Y - DrawDistance, DrawDistance * 2, DrawDistance * 2, 0);
+
+        foreach (var pos in gameBoardView.Positions)
         {
-            tileMap.SetCell(pos.X, pos.Y, (int)pos.Entity.EntityType);
-        }
-        positions = map.GetLayer(1);
-        foreach (var pos in positions.OrderBy(p => p.Layer))
-        {
-            tileMap.SetCell(pos.X, pos.Y, (int)pos.Entity.EntityType);
+            var posEntity = pos.GameObjects.OrderByDescending(x => x.Layer).FirstOrDefault();
+            int positionType = (int)(posEntity?.Type ?? GameObjectType.None);
+            tileMap.SetCell(pos.X, pos.Y, positionType);
         }
 
     }
 
     public void SetCameraPosition()
     {
-        camera2D.Position = tileMap.MapToWorld(new Vector2(player.Position.X, player.Position.Y)) + new Vector2(TileSize / 2, TileSize / 2);
+        camera2D.Position = tileMap.MapToWorld(new Vector2(Player.X, Player.Y)) + new Vector2(TileSize / 2, TileSize / 2);
     }
 
 }

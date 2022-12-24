@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace UKEngine.Attributes
+namespace RLEngine.Attributes
 {
 
     public class NavigableAttribute : Attribute

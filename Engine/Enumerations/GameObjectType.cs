@@ -1,10 +1,13 @@
-using UKEngine.Attributes;
+using RLEngine.Attributes;
 
-namespace UKEngine.Types
+namespace RLEngine.Enumerations
 {
-    public enum EntityType
+    public enum GameObjectType
 
     {
+        [Navigable(true)]
+        None = -1,
+
         [Navigable(true)]
         Floor = 249,
 
