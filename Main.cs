@@ -1,13 +1,10 @@
 using Godot;
-using System;
 using System.Linq;
-using static Godot.GD;
-using static UKEngine.Factories.TerrainFactory;
-using static UKEngine.Factories.EntityFactory;
-
-using RLEngine.Generators;
+using System.Timers;
 using RLEngine;
+using RLEngine.Generators;
 using RLEngine.Enumerations;
+using System.Threading.Tasks;
 
 public class Main : Node2D
 {
@@ -26,6 +23,8 @@ public class Main : Node2D
     IGameBoard GameBoard { get; set; }
     IGameObject Player { get; set; }
 
+    System.Timers.Timer GameTimer { get; set; }
+
     public override void _Ready()
     {
 
@@ -39,9 +38,15 @@ public class Main : Node2D
         // Create a player
         Player = new GameObject(GameBoard, GameObjectType.Player);
         GameBoard.AddGameObject(Player, 0, 0, 0);
-        GameBoard.AddGameObjects(-5, -5, RectangleRoomGenerator.Generate(11, 11));
+        GameBoard.AddGameObjects(-9, -9, RectangleRoomGenerator.Generate(19, 19));
         GameBoard.AddGameObject(GameObjectType.Wall, 1, 3, 0);
         GameBoard.AddGameObject(GameObjectType.Wall, 3, 2, 0);
+        GameBoard.AddGameObject(GameObjectType.Monster, -2, -2, 0);
+
+        GameTimer = new System.Timers.Timer(500);
+
+        GameTimer.Elapsed += (object sender, ElapsedEventArgs e) => AdvanceGameLoop(sender, e, GameBoard);
+        GameTimer.Start();
     }
 
     public override void _Process(float delta)
@@ -51,10 +56,7 @@ public class Main : Node2D
         if (tileMap == null) return;
 
         // gameloop. If no key press, do not update
-        if (!HandleInput())
-        {
-            AdvanceGameLoop();
-        };
+        HandleInput();
 
         tileMap.Clear();
         SetCameraPosition();
@@ -65,6 +67,7 @@ public class Main : Node2D
     public bool HandleInput()
     {
         var action = false;
+        (int x, int y, int z) moveDirection = (0, 0, 0);
 
         if (!action && Input.IsActionJustReleased("ui_right") && Input.IsActionJustReleased("ui_left")) return false;
         if (!action && Input.IsActionJustReleased("ui_up") && Input.IsActionJustReleased("ui_down")) return false;
@@ -72,64 +75,79 @@ public class Main : Node2D
         if (!action && Input.IsActionJustReleased("ui_right") && Input.IsActionJustReleased("ui_up"))
         {
             // Move right.
-            Player.Move(1, -1, 0);
+            moveDirection = (1, -1, 0);
             action = true;
         }
 
         if (!action && Input.IsActionJustReleased("ui_right") && Input.IsActionJustReleased("ui_down"))
         {
             // Move right.
-            Player.Move(1, 1, 0);
+            moveDirection = (1, 1, 0);
             action = true;
         }
 
         if (!action && Input.IsActionJustReleased("ui_left") && Input.IsActionJustReleased("ui_up"))
         {
             // Move right.
-            Player.Move(-1, -1, 0);
+            moveDirection = (-1, -1, 0);
             action = true;
         }
 
         if (!action && Input.IsActionJustReleased("ui_left") && Input.IsActionJustReleased("ui_down"))
         {
             // Move right.
-            Player.Move(-1, 1, 0);
+            moveDirection = (-1, 1, 0);
             action = true;
         }
 
         if (!action && Input.IsActionJustReleased("ui_right"))
         {
             // Move right.
-            Player.Move(1, 0, 0);
+            moveDirection = (1, 0, 0);
             action = true;
         }
 
         if (!action && Input.IsActionJustReleased("ui_left"))
         {
             // Move right.
-            Player.Move(-1, 0, 0);
+            moveDirection = (-1, 0, 0);
             action = true;
         }
 
         if (!action && Input.IsActionJustReleased("ui_up"))
         {
             // Move right.
-            Player.Move(0, -1, 0);
+            moveDirection = (0, -1, 0);
             action = true;
         }
         if (!action && Input.IsActionJustReleased("ui_down"))
         {
             // Move right.
-            Player.Move(0, 1, 0);
+            moveDirection = (0, 1, 0);
             action = true;
         }
+
+
+        if (action)
+        {
+            var scheduledAction = new ScheduledAction(Player.Id, new MoveAction(Player,
+                                                                          moveDirection.x,
+                                                                          moveDirection.y,
+                                                                          moveDirection.z));
+
+            GameBoard.GameLoop.ScheduleAction(scheduledAction);
+
+        }
+
 
         return action;
     }
 
-    public void AdvanceGameLoop()
+    public async void AdvanceGameLoop(object source, ElapsedEventArgs e, IGameBoard gameBoard)
     {
-
+        // run the gameloop on player input.
+        var gameTick = await gameBoard.GameLoop.ExecuteActions();
+        GD.Print(gameTick);
     }
 
     public void RedrawScreen()

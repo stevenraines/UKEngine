@@ -1,3 +1,4 @@
+using System.Text;
 using RLEngine.Attributes;
 
 namespace RLEngine.Enumerations
@@ -12,7 +13,10 @@ namespace RLEngine.Enumerations
         Floor = 249,
 
         [Navigable(false)]
-        Player = 64,
+        Player = (int)'@', //64
+
+        [Navigable(false)]
+        Monster = (int)'M', //??
 
         [Navigable(false)]
         Wall = 178,

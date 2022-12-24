@@ -62,7 +62,7 @@ namespace RLEngine
             return success;
         }
 
-        public GameBoardPosition GetGameBoardPosition(int x, int y, int z)
+        public IGameBoardPosition GetGameBoardPosition(int x, int y, int z)
         {
             return new GameBoardPosition(x, y, z, GameObjects.Where(g => g.X == x && g.Y == y && g.Z == z).OrderByDescending(g => g.Layer).ThenBy(g => g.Navigable).ToList());
         }

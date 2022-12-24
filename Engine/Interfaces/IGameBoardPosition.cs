@@ -13,7 +13,7 @@ namespace RLEngine
         int Z { get; }
 
         IList<IGameObject> GameObjects { get; }
-
+        bool IsNavigable();
     }
 
 }
