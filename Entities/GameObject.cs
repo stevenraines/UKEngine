@@ -16,7 +16,7 @@ namespace UKEngine.Entities
         public EntityType EntityType { get; set; } = 0;
         public bool Blocking { get; set; } = true;
 
-        public MapPosition Position { get; set; }
+        public MapEntity MapEntity { get; set; }
 
         public GameObject(EntityType entityType)
         {
@@ -25,7 +25,7 @@ namespace UKEngine.Entities
 
         public bool Move((int x, int y) direction)
         {
-            return Position.Map.MoveEntity(this, direction);
+            return MapEntity.Map.MoveEntity(this, direction);
 
         }
 

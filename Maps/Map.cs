@@ -8,28 +8,28 @@ namespace UKEngine.Maps
     public class Map
     {
 
-        private List<MapPosition> Positions = new List<MapPosition>();
+        private List<MapEntity> Entities = new List<MapEntity>();
 
         public Map()
         {
         }
 
-        public MapPosition GetPosition(int layer, int x, int y)
+        public MapEntity GetPosition(int layer, int x, int y)
         {
-            return Positions.Where(c => c.Layer == layer && c.X == x && c.Y == y).FirstOrDefault();
+            return Entities.Where(c => c.Layer == layer && c.X == x && c.Y == y).FirstOrDefault();
         }
 
-        public List<MapPosition> GetLayer(int layer)
+        public List<MapEntity> GetLayer(int layer)
         {
-            return Positions.Where(c => c.Layer == layer).ToList();
+            return Entities.Where(c => c.Layer == layer).ToList();
         }
 
         public void AddEntity(int layer, int x, int y, GameObject gameObject)
         {
-            var positionsWithGameObject = Positions.Where(e => e.Entity.Id == gameObject.Id).ToList();
-            positionsWithGameObject.ForEach(e => Positions.Remove(e));
-            var position = new MapPosition(layer, x, y, gameObject, this);
-            Positions.Add(position);
+            var entity = Entities.Where(e => e.Entity.Id == gameObject.Id).ToList();
+            entity.ForEach(e => Entities.Remove(e));
+            var newEntity = new MapEntity(layer, x, y, gameObject, this);
+            Entities.Add(newEntity);
         }
 
         public bool MoveEntity(GameObject gameObject, (int x, int y) direction)
