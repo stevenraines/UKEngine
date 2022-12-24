@@ -49,7 +49,6 @@ namespace RLEngine
             return AddGameObject(new GameObject(this, type), x, y, z);
         }
 
-
         public bool AddGameObjects(int offsetX, int offsetY, IList<(int x, int y, int z, GameObjectType gameObjectType)> gameObjectPositions)
         {
 
@@ -84,13 +83,9 @@ namespace RLEngine
         public bool MoveGameObject(IGameObject gameObject, int x, int y, int z)
         {
 
-
             return SetGameObjectPosition(gameObject, gameObject.X + x, gameObject.Y + y, gameObject.Z + z);
 
         }
-
-
-
 
     }
 
