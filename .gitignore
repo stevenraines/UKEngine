@@ -1,3 +1,4 @@
 .mono
 .import
 mono_crash.*.*.json
+mono_crash.*.*.blob

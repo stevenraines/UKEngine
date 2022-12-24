@@ -43,10 +43,9 @@ public class Main : Node2D
         GameBoard.AddGameObject(GameObjectType.Wall, 3, 2, 0);
         GameBoard.AddGameObject(GameObjectType.Monster, -2, -2, 0);
 
-        GameTimer = new System.Timers.Timer(500);
-
-        GameTimer.Elapsed += (object sender, ElapsedEventArgs e) => AdvanceGameLoop(sender, e, GameBoard);
-        GameTimer.Start();
+        // GameTimer = new System.Timers.Timer(1000);
+        // GameTimer.Elapsed += async (object sender, ElapsedEventArgs e) => await AdvanceGameLoop(sender, e, GameBoard);
+        //  GameTimer.Start();
     }
 
     public override void _Process(float delta)
@@ -56,13 +55,12 @@ public class Main : Node2D
         if (tileMap == null) return;
 
         // gameloop. If no key press, do not update
-        HandleInput();
+        if (HandleInput()) AdvanceGameLoop(); ;
 
-        tileMap.Clear();
-        SetCameraPosition();
         RedrawScreen();
-
     }
+
+
 
     public bool HandleInput()
     {
@@ -142,16 +140,40 @@ public class Main : Node2D
 
         return action;
     }
+    /*
+        public async Task<long> AdvanceGameLoop(object source, ElapsedEventArgs e, IGameBoard gameBoard)
+        {
+            // run the gameloop on player input.
+            var currentTick = gameBoard.GameLoop.GameTick;
+            var gameTick = await gameBoard.GameLoop.ExecuteActions();
 
-    public async void AdvanceGameLoop(object source, ElapsedEventArgs e, IGameBoard gameBoard)
+            if (gameTick == currentTick) return gameTick;
+            GD.Print(gameTick);
+
+
+            return gameTick;
+
+
+        }
+
+        */
+
+
+    public async Task<long> AdvanceGameLoop()
     {
         // run the gameloop on player input.
-        var gameTick = await gameBoard.GameLoop.ExecuteActions();
+
+        var gameTick = await GameBoard.GameLoop.ExecuteActions();
         GD.Print(gameTick);
+        return gameTick;
+
     }
 
     public void RedrawScreen()
     {
+
+        tileMap.Clear();
+        SetCameraPosition();
 
         var gameBoardView = new GameBoardView(GameBoard, Player.X - DrawDistance, Player.Y - DrawDistance, DrawDistance * 2, DrawDistance * 2, 0);
 
@@ -163,6 +185,8 @@ public class Main : Node2D
         }
 
     }
+
+
 
     public void SetCameraPosition()
     {

@@ -13,6 +13,7 @@ namespace RLEngine
         public GameLoopType Type { get; }
 
         public int LoopFrequencyMS { get; set; } = 5000;
+        public bool GameLoopRunning { get; set; } = false;
 
         public DateTime NextLoop { get; set; }
 
@@ -36,24 +37,35 @@ namespace RLEngine
 
         public async Task<long> ExecuteActions()
         {
+            if (GameLoopRunning) return GameTick;
 
-
-            var executeStartTime = DateTime.UtcNow;
-
-            var actionsToExecute = ScheduledActions.Where(x => x.ExecuteAt <= GameTick).ToList();
-
-            var uniqueGameObjects = actionsToExecute.Select(a => a.OwnerId).Distinct();
-
-            foreach (var gameObjectId in uniqueGameObjects)
+            GameLoopRunning = true;
+            try
             {
-                IScheduledAction scheduledAction = actionsToExecute.Where(a => a.OwnerId == gameObjectId).FirstOrDefault();
-                scheduledAction.Action.Execute();
-                ScheduledActions.Remove(scheduledAction);
+
+                var executeStartTime = DateTime.UtcNow;
+
+                var actionsToExecute = ScheduledActions.Where(x => x.ExecuteAt <= GameTick).ToList();
+
+                var uniqueGameObjects = actionsToExecute.Select(a => a.OwnerId).Distinct();
+
+                foreach (var gameObjectId in uniqueGameObjects)
+                {
+                    IScheduledAction scheduledAction = actionsToExecute.Where(a => a.OwnerId == gameObjectId).FirstOrDefault();
+                    scheduledAction.Action.Execute();
+                    ScheduledActions.Remove(scheduledAction);
+                }
+
+                NextLoop = executeStartTime.AddMilliseconds(LoopFrequencyMS);
+
+                GameTick += 1;
+
+            }
+            finally
+            {
+                GameLoopRunning = false;
             }
 
-            NextLoop = executeStartTime.AddMilliseconds(LoopFrequencyMS);
-
-            GameTick += 1;
             return GameTick;
 
         }
